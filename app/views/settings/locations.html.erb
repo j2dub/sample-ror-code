@@ -1,0 +1,146 @@
+<script type="text/javascript">
+$(document).ready(function(){
+  $("div.newlocationbox").hide();
+	$(".btn1").click(function(){
+  $("div.newlocationbox").slideDown("slow");
+	$(".btn1").toggleClass("makelinkdisappear");
+  return false;
+  });
+});
+</script>
+
+<div class="centercontent">
+
+<%= render 'settings/header' %>
+
+	<div class="accountprofile">
+		<div class="left">
+			<%= render 'settings/nav' %>
+		</div>
+		<div class="right">
+	
+			<div class="pocket"><h2 class="profiletitle">locations</h2></div>
+			<a style="text-decoration:none; outline:none;" href=""><%#= image_tag("icon_add.png", :alt => "add a location", :title => "add a location", :class => "btn1 iconadd") %></a>
+			
+			<div class="newlocationbox">
+				<div class="pocket">
+							<!-- add new location form -->
+							<%#= render 'shared/location_form' %>
+							<!-- add new location form -->	
+				</div>
+			</div>	
+			
+			
+			
+					
+			<div class="scontent-shift">
+			
+				<% if @locationscount < 10 %>
+				<h2 class="scontent-01">create a new location</h2>
+
+					
+						<div class="pocket-empty">
+
+							
+								<%= form_for :setting, :id => "addlocation", :name => "addlocation", :url => { :action => "addlocation" }, :html => { :method => :put } do |f| %>
+							
+									<% if @locationscount < 10 %>	
+										<div class="pocket-line">zip code <%= text_field_tag(:zipcode, '', :class => "settings_input_edit_short round", :autocomplete => :off, :autofocus => true, :placeholder => "enter valid 5-digit zip code", :size => 5, :maxlength => 5, :style => "margin-left: 25px;") %></div>
+									<% end %>
+							
+									<div class="pocket-bottom"> 
+									<p class="pocket-bottom-single"><br/>&nbsp;</p>
+									
+									<% if @locationscount < 10 %>	
+										<%#= submit_tag("add location", :class => "circleitem round", :style => "margin-top: -26px;", :onclick => "_gaq.push(['_trackEvent', 'UserSettingsLocations', 'Click', 'AddLocation']);") %>
+									
+													<button type="submit" class="savesettings round" onclick="_gaq.push(['_trackEvent', 'UserSettingsLocations', 'Click', 'AddLocation']);" style="margin-top: -26px;">
+                										<i class="fa fa-plus-square fa-lg"></i>&nbsp;&nbsp;&nbsp;add location
+            									    </button>
+									<% end %>
+								
+									</div>
+								
+								<% end %>
+								
+								
+								
+			
+						</div>	
+					<% end %>
+				
+				<h2 class="scontent-01">current location settings</h2>	
+					
+					<% if @locationscount == 0 %>
+						<div class="pocket-empty">
+							<div class="pocket-top" style="text-align: center;">your account currently has zero locations.&nbsp;&nbsp;&nbsp;</div>
+						</div>
+					<% end %>
+					
+					
+					<div class="pocket-empty">
+							<% 
+								@location_counter = 1
+								@locations.each do |location| 
+								@location_zip = location.zipcode_id.to_s
+								@location_id = location.id
+								@location_city = location.citymixedcase
+								@location_state = location.state
+							%>
+								<div class="<% if @location_counter == 1 %>pocket-top<% else %>pocket-line<% end %>">location <%= text_field_tag(:locationdef, @location_zip+" - "+@location_city+", "+@location_state, :disabled => true, :class => "settings_input_edit round noFocus", :size => 10, :maxlength => 30, :style => "margin-left: 20px;") %> <%#= link_to "[x]", settings_profile_path  %>
+								<%= link_to "", settings_droplocation_path(:lid => @location_id), :method => :droplocation, :class => "fa fa-times-circle fa-lg delete-x",
+									:confirm => "are you sure you want to remove this location?".html_safe, 
+									:title => "remove this location".html_safe, :onclick => "_gaq.push(['_trackEvent', 'UserSettingsLocations', 'Click', 'RemoveLocation']);" %>
+								</div>
+								
+								<a href="#action-droplocation<%= @location_counter %>" name="modal" ></a>
+											
+											<div id="boxes">
+												
+													<div id="action-droplocation<%= @location_counter %>" class="window">
+														 <%= render 'layouts/closewindow' %>
+														 <%= render 'droplocation' %>				
+													</div>	
+													<!-- do not remove div#mask, creates fill for entire screen --> 
+													<div id="mask"></div>					
+												
+											</div>
+								<% @location_counter = @location_counter + 1 %>
+						<% end %>
+						
+						<div class="pocket-bottom-location">
+							<p class="staticcontent-01" style="margin-left: 12px; margin-top: 20px;">
+								note: ten is maximum number of locations allowed under your location settings. 
+								<% if @locationscount == 10 %>
+								<br/>remove one or more current location(s) to add new locations.
+								<% end %>
+							</p>
+						</div>
+					</div>
+
+
+
+			<br/><br/>
+			
+			</div>
+			
+			
+		
+		</div>
+	</div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

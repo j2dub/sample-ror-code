@@ -1,0 +1,470 @@
+<% content_for :header do %>
+<%= auto_discovery_link_tag :atom, "/feed" %>
+   <%= auto_discovery_link_tag :rss, "/feed.rss" %><% end %>
+
+<% if signed_in? %>
+
+
+
+<%#= render 'shared/itemslist' %>
+
+
+  <div id="container" align="center" class="clearfix" >
+  
+  <h1 class="homepage">forsalephoto - photos of items for sale</h1>
+ 
+  <div id="toTop">back<br/>to top</div>
+  
+      <div id="main" role="main">
+      
+      <% if not @squery.to_s.empty? %>
+            <!-- removed old search header -->
+			<div align="center" class="head-center-search">
+				<h1 class="title-user-header">search results for <%= link_to("#"+@squery[0].to_s, "../../../#"+@squery[0].to_s)  %></h1>
+			</div>		
+		
+	  <% end %>
+
+      <ul itemscope itemtype="http://schema.org/Product" id="tiles">
+        <!-- These are our grid blocks -->
+		<% @items.each do |item| %>
+		  <%
+			@image_url = item.image.th.to_s
+			@image_url_final = @image_url.gsub("https://s3.amazonaws.com/images.forsalephoto.com", "http://images.forsalephoto.com").gsub("https://images.forsalephoto.com.s3.amazonaws.com", "http://images.forsalephoto.com").gsub("https://img-cache-01.forsalephoto.com.s3.amazonaws.com/item/","http://img-cache-01.forsalephoto.com/item/")
+			@image_view_count = item.views_count
+			@image_price = item.price.to_s
+			@image_th_width = item.th_width.to_i
+			@image_th_height = item.th_height.to_i
+			@item_sold = item.is_sold.to_s.strip
+			@item_posted = item.created_at					
+			#old call: item.image.th
+			
+			@circlespartof = Circlerelationship.find(:all, :conditions => ["item_id = ?", item.id])
+				if @circlespartof.nil?
+					@circlespartofcount = 0
+				else
+					@circlespartofcount = @circlespartof.count
+				end 
+				  
+			@likes = Like.find(:all, :conditions => ["item_id = ?", item.id])
+		    @likescountreal = @likes.count			
+		    
+		    #@tags = Item.find(:all, :conditions => ["id = ?", item.id]).tag_counts_on(:tags) 	
+		    @tags = Item.find(item.id).tag_counts_on(:tags) 
+		          if @tags.empty? 
+						   @tagsforitem = " "
+				  else
+					   @tags.each do |tag| 
+							@tagsforitem = @tagsforitem.to_s+" #"+tag.name.to_s
+						  end
+				  end
+				  
+			 #update views count
+			 #remove later after go-live
+			 if not @useragent.nil?
+				 if @useragent.downcase.include?("google") || @useragent.downcase.include?("yahoo") || @useragent.downcase.include?("msn") || @useragent.downcase.include?("robot") || @useragent.downcase.include?("bot") || @useragent.downcase.include?("spider") || @useragent.downcase.include?("crawl")
+				 else	
+					@viewscount = item.views_count + 1
+					#Item.update(item.id, :views_count => @viewscount)  
+					@itemupdate = Item.find_by_sql(["UPDATE items SET views_count = ? WHERE id = ?", @viewscount, item.id])
+				 end
+			 end
+
+			 #create link for items
+			 if item.tinyurl.length > 5
+				if item.title.length > 5
+					@ahrefitem = root_url+'p/'+item.tinyurl.downcase.strip+'/'+item.title.downcase.strip+'/'		
+				else
+					@ahrefitem = root_url+'p/'+item.tinyurl.downcase.strip+'/'
+				end
+			 end			 
+               
+		  %>        
+			<li class="round">				
+				<div itemprop="offers" itemscope itemtype="http://schema.org/Offer" class="item">
+				<meta itemprop="name" content="<%= @tagsforitem.strip.gsub("#","") %>">
+				<meta itemprop="url" content="<%= @ahrefitem.downcase %>" >
+				<meta itemprop="description" content="for sale on forsalephoto: <%= @tagsforitem.strip.gsub("#","") %>">
+				<meta itemprop="image" content="<%= @image_url_final %>">		 	
+					<a href="<%= @ahrefitem.downcase %>">
+						<p class="useritemtags"><%= @tagsforitem.strip %></p>
+						<div id="small-image">
+							<img class="thumbphotos round  <% if @item_sold == 'Y' %>lessOpacity <% end %>" src="<%= @image_url_final %>" <% if @image_th_width > 0 %>width="<%= @image_th_width %>"<% else %>width="190"<% end %> <% if @image_th_height > 0 %>height="<%= @image_th_height %>"<% end %> <% if not signed_in? && @tagsforitem.to_s.length.to_i > 5 %>alt="<%= @tagsforitem.gsub("#", "").strip %>"<% end %> />
+						</div>
+						<% if @item_sold == 'Y' %>
+							<h2 class="thumb_imageover_sold thumb_sold"><span class="round">item sold</span></h2>
+						<% end %>
+						<p class="hpcounts">views: <%= number_with_delimiter(@image_view_count) %>&nbsp;&nbsp;&nbsp;&nbsp;likes: <%= number_with_delimiter(@likescountreal) %>&nbsp;&nbsp;&nbsp;&nbsp;circles: <%= number_with_delimiter(@circlespartofcount) %>&nbsp;&nbsp;&nbsp;</p>
+						<p class="useritemdate">posted <abbr class="timeago" title="<%= @item_posted.iso8601 %>"><%= @item_posted.iso8601 %></abbr></p>							     
+					</a>
+					<meta itemprop="price" content="$<%= number_with_delimiter(@image_price) %>">
+				</div>
+			</li>
+	    <% @tagsforitem = "" %>
+        <% end %>
+        <!-- End of grid blocks -->
+      </ul>
+
+    </div>
+   </div>
+  
+<div id="message"><a href="top">Scroll to top</a></div>
+
+
+
+
+  
+<% else %>
+
+
+  
+  <div id="container" align="center" class="clearfix" >
+  
+  <div id="toTop">back<br/>to top</div>
+  
+      <div id="main" role="main">
+      
+      <% if not @squery.to_s.empty? %>        
+            <!-- removed old search header -->
+			<div align="center" class="head-center-search">
+				<h1 class="title-user-header">search results for <%= link_to("#"+@squery[0].to_s, "../../../#"+@squery[0].to_s)  %></h1>
+			</div>		
+		
+		
+	  <% end %>      
+
+      <ul itemscope itemtype="http://schema.org/Product" id="tiles">
+        <!-- These are our grid blocks -->
+		<% @items.each do |item| %>
+		  <%
+			@image_url = item.image.th.to_s
+			@image_url_final = @image_url.gsub("https://s3.amazonaws.com/images.forsalephoto.com", "http://images.forsalephoto.com").gsub("https://images.forsalephoto.com.s3.amazonaws.com", "http://images.forsalephoto.com").gsub("https://img-cache-01.forsalephoto.com.s3.amazonaws.com/item/","http://img-cache-01.forsalephoto.com/item/")
+			@image_view_count = item.views_count
+			@image_price = item.price.to_s
+			@image_th_width = item.th_width.to_i
+			@image_th_height = item.th_height.to_i
+			@item_sold = item.is_sold.to_s.strip
+			@item_posted = item.created_at			
+			#old call: item.image.th
+			
+			@circlespartof = Circlerelationship.find(:all, :conditions => ["item_id = ?", item.id])
+				if @circlespartof.nil?
+					@circlespartofcount = 0
+				else
+					@circlespartofcount = @circlespartof.count
+				end 
+				  
+			@likes = Like.find(:all, :conditions => ["item_id = ?", item.id])
+		    @likescountreal = @likes.count			
+		    
+		    #@tags = Item.find(:all, :conditions => ["id = ?", item.id]).tag_counts_on(:tags) 	
+		    @tags = Item.find(item.id).tag_counts_on(:tags) 
+		          if @tags.empty? 
+						   @tagsforitem = " "
+				  else
+					   @tags.each do |tag| 
+							@tagsforitem = @tagsforitem.to_s+" #"+tag.name.downcase.to_s
+						  end
+				  end
+				  
+			 #update views count
+			 #remove later after go-live
+			 if @useragent.downcase.include?("google") || @useragent.downcase.include?("yahoo") || @useragent.downcase.include?("msn") || @useragent.downcase.include?("robot") || @useragent.downcase.include?("bot") || @useragent.downcase.include?("spider") || @useragent.downcase.include?("crawl")
+			 else	
+				@viewscount = item.views_count + 1
+				#Item.update(item.id, :views_count => @viewscount)  
+				@itemupdate = Item.find_by_sql(["UPDATE items SET views_count = ? WHERE id = ?", @viewscount, item.id])
+			 end
+			 
+			 #create link for items
+			 if item.tinyurl.length > 5
+				if item.title.length > 5
+					@ahrefitem = root_url+'p/'+item.tinyurl.downcase.strip+'/'+item.title.downcase.strip+'/'		
+				else
+					@ahrefitem = root_url+'p/'+item.tinyurl.downcase.strip+'/'
+				end
+			 end
+               
+		  %>        
+			<li class="round">		
+				<div itemprop="offers" itemscope itemtype="http://schema.org/Offer" class="item">
+				<meta itemprop="name" content="<%= @tagsforitem.strip.gsub("#","") %>">
+				<meta itemprop="url" content="<%= @ahrefitem.downcase %>" >
+				<meta itemprop="description" content="for sale on forsalephoto: <%= @tagsforitem.strip.gsub("#","") %>">
+				<meta itemprop="image" content="<%= @image_url_final %>">
+					<a href="<%= @ahrefitem %>">
+						<p class="useritemtags"><%= @tagsforitem.strip %></p>
+						<div id="small-image">
+							<img class="thumbphotos round  <% if @item_sold == 'Y' %>lessOpacity <% end %>" src="<%= @image_url_final %>" <% if @image_th_width > 0 %>width="<%= @image_th_width %>"<% else %>width="190"<% end %> <% if @image_th_height > 0 %>height="<%= @image_th_height %>"<% end %> <% if not signed_in? && @tagsforitem.to_s.length.to_i > 5 %>alt="<%= @tagsforitem.gsub("#", "").strip %>"<% end %> />
+						</div>
+					
+						<% if @item_sold == 'Y' %>
+							<h2 class="thumb_imageover_sold thumb_sold"><span class="round">item sold</span></h2>
+						<% end %>	
+						<p class="hpcounts">views: <%= number_with_delimiter(@image_view_count) %>&nbsp;&nbsp;&nbsp;&nbsp;likes: <%= number_with_delimiter(@likescountreal) %>&nbsp;&nbsp;&nbsp;&nbsp;circles: <%= number_with_delimiter(@circlespartofcount) %>&nbsp;&nbsp;&nbsp;</p>
+						<p class="useritemdate">posted <abbr class="timeago" title="<%= @item_posted.iso8601 %>"><%= @item_posted.iso8601 %></abbr></p> 
+					</a>
+					<meta itemprop="price" content="$<%= number_with_delimiter(@image_price) %>">
+				</div>
+			</li>
+	    <% @tagsforitem = "" %>
+        <% end %>
+        <!-- End of grid blocks -->
+      </ul>
+
+    </div>
+   </div>
+   
+  
+<div id="message"><a href="top" rel="nofollow">Scroll to top</a></div>
+
+<% end %>
+
+
+
+  <script type="text/javascript">  
+  // create function to show comma for > 999.
+	Number.prototype.number_with_delimiter = function(delimiter) {
+		var number = this + '', delimiter = delimiter || ',';
+		var split = number.split('.');
+		split[0] = split[0].replace(
+			/(\d)(?=(\d\d\d)+(?!\d))/g,
+			'$1' + delimiter
+		);
+		return split.join('.');    
+	};
+  </script>
+
+  <script type="text/javascript">
+    var handler = null;
+    var page = 1;
+    var isLoading = false;
+    <% if signed_in? %>
+         var apiURL = '../itemspull.js'
+    <% else %>
+         var apiURL = '../items.js'
+    <% end %>
+    
+	Number.prototype.number_with_delimiter = function(delimiter) {
+		var number = this + '', delimiter = delimiter || ',';
+		var split = number.split('.');
+		split[0] = split[0].replace(
+			/(\d)(?=(\d\d\d)+(?!\d))/g,
+			'$1' + delimiter
+		);
+		return split.join('.');    
+	};    
+    
+    // Prepare layout options.
+    var options = {
+      autoResize: true, // This will auto-update the layout when the browser window is resized.
+      container: $('#tiles'), // Optional, used for some extra CSS styling
+      offset: 8, // Optional, the distance between grid items
+      itemWidth: 220 // Optional, the width of a grid item
+    };
+    
+    /**
+     * When scrolled all the way to the bottom, add more tiles.
+     */
+    function onScroll(event) {
+      // Only check when we're not still waiting for data.
+      if(!isLoading) {
+        // Check if we're within 500 pixels of the bottom edge of the broser window.
+        var closeToBottom = ($(window).scrollTop() + $(window).height() > $(document).height() - 500);
+        if(closeToBottom) {
+          loadData();
+        }
+      }
+    };
+    
+    /**
+     * Refreshes the layout.
+     */
+    function applyLayout() {
+      // Clear our previous layout handler.
+      if(handler) handler.wookmarkClear();
+      
+      // Create a new layout handler.
+      handler = $('#tiles li');
+      handler.wookmark(options);
+    };
+    
+    /**
+     * Loads data from the API.
+     */
+    function loadData() {
+      isLoading = true;
+      $('#loaderCircle').show();
+      
+      $.ajax({
+        url: apiURL,
+        dataType: 'jsonp',
+        data: {page: page}, // Page parameter to make sure we load new data
+        success: onLoadData
+      });
+    };
+    
+    /**
+     * Receives data from the API, creates HTML for images and updates the layout
+     */
+    function onLoadData(data) {
+      isLoading = false;
+      $('#loaderCircle').hide();
+      
+      // Increment page index for future calls.
+      page++;
+      
+      // Create HTML for the images.
+      var html = '';
+      var i=0, length=data.length, image;
+      for(; i<length; i++) {
+        image = data[i];
+        
+        html += '<li class="round">';
+        html += '<div itemprop="offers" itemscope itemtype="http://schema.org/Offer" class="item">';
+        
+        var imagetitle=image.title.replace(/\s+/g, '');
+        var imagetinyurl=image.tinyurl.replace(/\s+/g, '');
+             
+         if (imagetitle=='')
+			{
+				html += '<a href="<%= root_url %>p/'+imagetinyurl.toLowerCase()+'/">';
+			}
+		   else
+			{
+				html += '<a href="<%= root_url %>p/'+imagetinyurl.toLowerCase()+'/'+imagetitle.toLowerCase()+'/">';
+			} 
+		//html += '<a href="../../items/'+image.id+'">';
+		
+		
+        var myJSONObject = image;
+        var arLen=myJSONObject.tags.length;
+        var hashtags='';
+        var hashtagsclean='';
+		
+		   for ( var k=0, len=arLen; k<len; k++ ){
+			  // do something with myArray[i]
+			  hashtags = hashtags + "#" + myJSONObject.tags[k].name + " ";
+			  hashtagsclean = hashtagsclean + myJSONObject.tags[k].name + " ";
+			}
+			
+		html += '<p class="useritemtags">'+hashtags+'</p>';
+        				
+	   //reset image for next item
+       var imageurltemp='';
+       var imageprice=0;
+       var imagesold=image.is_sold.replace(/\s+/g, '');
+       var imagestamp=jQuery.timeago(image.created_at);        
+       var imageurltemp=image.image.th.url;
+       //do not change next line ##
+       var imageprice=parseInt(~~image.price).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,').replace(".00","");
+	   var imageurltempnew=imageurltemp.replace("https://img-cache-01.forsalephoto.com.s3.amazonaws.com/item","http://img-cache-01.forsalephoto.com/item");	
+	   //gsub("https://img-cache-01.forsalephoto.com.s3.amazonaws.com/item/","http://img-cache-01.forsalephoto.com/item/")
+	   var imageheight=parseInt(image.th_height);
+	   var imagewidth=parseInt(image.th_width);
+	   var imageheightcalc=Math.round(imageheight/imagewidth*190);
+        
+        
+		   //check solds
+		   if (imagesold=='Y')
+			{
+				var imagesoft = "lessOpacity";
+			}
+		   else
+			{
+				var imagesoft = '';
+			} 
+			
+			        
+			// Image tag (preview in Wookmark are 190px wide, so we calculate the height based on that).
+			if ( isNaN(imageheightcalc) )
+			  {
+			  html += '<div id="small-image"><img class="thumbphotos round '+imagesoft+'" src="'+imageurltempnew+'" width="190" ></div>';
+			  }
+			else
+			  {
+			  html += '<div id="small-image"><img class="thumbphotos round '+imagesoft+'" src="'+imageurltempnew+'" width="190" height="'+Math.round(imageheight/imagewidth*190)+'"></div>';
+			  }
+		  
+			//show item sold
+			if (imagesold=='Y')
+			{
+				 html += '<h2 class="thumb_imageover_sold thumb_sold"><span class="round">item sold</span></h2>';
+			}  
+					  
+       
+
+          //convert to int before display
+          var numberoflikes=parseInt(image.likes_count);
+          var numberofcircles=parseInt(image.circle_count);
+        
+		  
+        // Image stats
+          html += '<p class="hpcounts">views: '+image.views_count.number_with_delimiter()+'&nbsp;&nbsp;&nbsp;&nbsp;';
+          html += 'likes: '+numberoflikes.number_with_delimiter()+'&nbsp;&nbsp;&nbsp;&nbsp;';
+          html += 'circles: '+numberofcircles.number_with_delimiter()+'</p>';
+		  // html += '<p class="hptags">'+hashtags+'</p>';
+		  html += '<p class="useritemdate">posted <abbr class="timeago" title="'+imagestamp+'">'+imagestamp+'</abbr></p>';
+		    		  
+        
+        html += '</a>';
+        html += '<meta itemprop="price" content="$'+imageprice+'">'; 
+        html += '<meta itemprop="name" content="'+hashtagsclean+'">';
+        	if (imagetitle=='')
+			{
+				html += '<meta itemprop="url" content="<%= root_url %>p/'+imagetinyurl.toLowerCase()+'/" >';
+			}
+		   else
+			{
+				html += '<meta itemprop="url" content="<%= root_url %>p/'+imagetinyurl.toLowerCase()+'/'+imagetitle.toLowerCase()+'/" >';
+			} 
+        html += '<meta itemprop="description" content="for sale on forsalephoto: '+hashtagsclean+'">';
+        html += '<meta itemprop="image" content="'+imageurltempnew+'">';
+        
+        html += '</div>';
+        html += '</li>';
+      }
+      
+      // Add image HTML to the page.
+      $('#tiles').append(html);
+      
+      // Apply layout.
+      applyLayout();
+    };
+  
+    $(document).ready(new function() {
+      // Capture scroll event.
+      $(document).bind('scroll', onScroll);
+      
+      // Load first data from the API.
+      loadData();
+    });
+  </script>
+  
+
+
+
+
+<script type="text/javascript">
+$(function() {
+	$(window).scroll(function() {
+		if($(this).scrollTop() > 350) {
+			$('#toTop').fadeIn(600);	
+		} else {
+			$('#toTop').fadeOut(400);
+		}
+	});
+ 
+	$('#toTop').click(function() {
+		$('body,html').animate({scrollTop:0},900);
+		try { 
+			_gaq.push(['_trackEvent', "PageFooter", "Click", "ScrollToTop"]); 
+			} catch(err){}
+		return false;
+	});	
+});
+</script>
+
+
+
+  

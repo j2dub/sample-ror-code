@@ -1,0 +1,220 @@
+
+
+<tr>
+  <td class="item">
+  <%# if current_user?(item.user) && action_name == "edit" %>
+  <%# end %>
+  
+  <% if action_name != "edit" %>
+	
+	<div class="centercontent">  
+	<br/>
+  
+  
+<!-- begin header two col -->
+<div class="colmask-00 rightmenu-00">
+	<div class="colleft-00">
+		<div class="col1-00">
+			<!-- Column 1 start -->
+				<h1 class="title-pages-items"><% @tags.each do |tag| %><%= tag.name.to_s  %> <% end %>for sale</h1>
+				<h2 class="title-pages-items"><% @tags.each do |tag| %> <%= link_to("#"+tag.name.to_s, root_url+"#"+tag.name.to_s)  %> <% end %></h2>
+			<!-- Column 1 end -->
+		</div>
+		<div itemscope itemtype="http://schema.org/Person" class="col2-00">
+			<!-- Column 2 start -->              
+			 <span class="timestamp">item posted <abbr class="timeago" title="<%= item.created_at.iso8601 %>"><%= item.created_at.iso8601 %></abbr> by <strong><%= link_to @itemusername, root_url+@itemusername+'/', :onclick => "_gaq.push(['_trackEvent', 'ItemView', 'Click', 'UserMain']);" %></strong>
+			 <% if not @city.nil? %><br/> near <%= @city.downcase %>, <%= @state.downcase %><% end %>
+			 <% if signed_in? && @likemessage == "isliked" %> <br/>you liked this photo <abbr class="timeago" title="<%= @liketimedate.iso8601 %>"><%= @liketimedate.iso8601 %></abbr> <br/><br/><% end %></span><br/>
+			<meta itemprop="name" content="<%= @itemusername %>">
+			<meta itemprop="url" content="<%= root_url %><%= @itemusername %>/">
+			<!-- Column 2 end -->
+		</div>
+	</div>
+</div>
+<!-- end header two col -->  
+  
+  
+		<%
+			#determine url for item image
+			@image_url = item.image.to_s
+	        #@image_width = item.width.to_s.strip
+	        #@image_height = item.height.to_s.strip
+	        @image_width = item.lg_width.to_s.strip
+	        @image_height = item.lg_height.to_s.strip	   
+	        @image_tinyurl = item.tinyurl.to_s.strip     
+	        @image_title = item.title.to_s.strip
+	        if @image_width.to_i < 651 && @image_width.to_i > 0
+	           widthclass = "narrow"
+	           widthclass_sold = "narrow_sold"
+	        elsif @image_width.to_i == 0 
+	           widthclass = "wide"
+	           widthclass_sold = "wide_sold"
+	             @image_width = "700"
+	        else
+	           widthclass = "wide" 
+	           widthclass_sold = "wide_sold"
+	             @image_width = "700"
+	        end
+		#https://images.forsalephoto.com.s3.amazonaws.com/development
+			@image_url_final = @image_url.gsub("https://s3.amazonaws.com/images.forsalephoto.com", "http://images.forsalephoto.com").gsub("https://images.forsalephoto.com.s3.amazonaws.com", "http://images.forsalephoto.com").gsub("https://img-cache-01.forsalephoto.com.s3.amazonaws.com/item/","http://img-cache-01.forsalephoto.com/item/")
+			@image_url_lowres = item.image.th.to_s
+			@image_url_lowres_final = @image_url_lowres.gsub("https://s3.amazonaws.com/images.forsalephoto.com", "http://images.forsalephoto.com").gsub("https://images.forsalephoto.com.s3.amazonaws.com", "http://images.forsalephoto.com").gsub("https://img-cache-01.forsalephoto.com.s3.amazonaws.com/item/","http://img-cache-01.forsalephoto.com/item/")
+			#old call: item.image
+			
+
+		%>    
+		
+<div itemscope itemtype="http://schema.org/Product" >	
+  
+<!-- begin new 3 col css -->
+<div temprop="offers" itemscope itemtype="http://schema.org/Offer" class="colmask threecol">
+		<meta itemprop="name" content="<%= @tagsforitem.strip.gsub("#","") %>">
+		<meta itemprop="price" content="$<%= number_with_delimiter(item.price) %>">
+		<meta itemprop="description" content="for sale on forsalephoto: <%= @tagsforitem.strip.gsub("#","") %>">
+		<meta itemprop="url" content="<%= root_url %>p/<%= @image_tinyurl %>/<%= @tagsforitem.strip.gsub("#","").gsub(" ","-") %>">
+		<% if not @city.nil? %> 
+		 <div itemscope itemtype="http://schema.org/Place">
+		 	<meta itemprop="name" content="<%= @city %>, <%= @state %>">
+   			 <div itemprop="address" itemscope itemtype="http://schema.org/PostalAddress">
+     		 	<meta itemprop="addressLocality" content="<%= @city %>">
+     			<meta itemprop="addressRegion" content="<%= @state %>">
+   			 </div>
+  		</div>
+  		<% end %>
+  
+	<div class="colmid">
+		<div class="colleft">
+			<div class="col1">
+				
+				<!-- #center column start -->
+				   <div class="image">
+					   <a onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'LikePhoto']);" href="<%= root_url+'p/'+@image_tinyurl+'/'%><% if @image_title.length > 4 %><%= @image_title+'/' %><% end %><% if signed_in? && @likemessage != "isliked" %>?p=like<% end %>">				
+					        <div id="large-image">
+					        <img itemprop="image" class="itemphotos <% if item.is_sold.strip.to_s == 'Y' %>lessOpacity <% end %>round <% if not params[:p] == 'like' %><% if signed_in? && @likemessage != "isliked" %>thumbsup<% end %><% end %>" src="<%= @image_url_final %>" lowsrc="<%= @image_url_lowres_final %>" <% if not @tagsforitem.nil? %><% if not signed_in? && @tagsforitem.to_s.length.to_i > 5 %>alt="<%= @tagsforitem.gsub("#", "").strip %>"<% end %><% end %> height="<%= @image_height %>" width="<%= @image_width %>" />
+					        </div>
+					   </a>
+					  <% if item.is_sold.strip.to_s == 'Y' %>
+							<h2 class="imageover_sold <%= widthclass_sold %>"><span class="round">item sold</span></h2>
+					  <% else %>		   
+						  <% if not item.price.empty? %>
+							<h2 class="imageover <%= widthclass %>"><span class="round">$<%= number_with_delimiter(item.price) %></span></h2>
+						  <% end %>
+					  <% end %>
+				   </div>
+				<!-- #center columnend -->
+				
+			</div>
+			<div class="col2">
+				<!-- #left column start -->
+					<br/><a href="#action-circle" name="modal" onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'CircleItem']);" ><input value="circle photo" class="otheractions round" ></a>
+					<br/><br/>
+					<% if signed_in? %>
+					    <% if @pingswitch == "on" %>
+							<% if @itemuserid.to_s != current_user.id.to_s %>
+								<% if @deletecheck.to_s.gsub(" ","") == "N" %>
+									<a href="#action-ping" name="modal" onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'PingSeller']);"><input value="ping seller" class="otheractions round" ></a>
+								 <% end %>
+						    <% end %>
+					    <% end %>
+					<% else %>
+						<% if @deletecheck.to_s.gsub(" ","") == "N" %>
+							<a href="#action-ping" name="modal" onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'PingSeller']);"><input value="ping seller" class="otheractions round" ></a>
+						<% end %>
+					<% end %>
+					<br/><br/><br/><br/><br/>
+					<div class="centericons">
+					<span class="iconsbar2"><img class="iconsimg2" src="http://asset-cache-01.forsalephoto.com/icon-views.png"><br/>
+					views: <%= number_with_delimiter(@viewscount) %></span>			
+					<span class="iconsbar2"><img class="iconsimg2" src="http://asset-cache-01.forsalephoto.com/icon-likes.png"><br/>
+					likes: <%= number_with_delimiter(@likescountreal) %></span><br/>
+					<span class="iconsbar2"><img class="iconsimg2" src="http://asset-cache-01.forsalephoto.com/icon-circles.png"><br/>
+					circles: <%= number_with_delimiter(@circlespartofcount) %></span>
+					</div>
+				<!-- #left column end -->
+			</div>
+			<div class="col3">
+				<!-- #right column start --><br/>
+				<div align="center" style="margin-top: 4px;">
+					<div onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'TweetItem']);">
+						<a href="https://twitter.com/share" class="twitter-share-button" data-hashtags="<%= @hashtagsstr %>" data-text="spotted @forsalephoto via <%= @tinyurl %> ..." data-url="<%= @tinyurl %>" data-lang="en" data-related="anywhereTheJavascriptAPI" data-count="vertical" onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'TweetItem']);">Tweet</a>
+						<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+					</div>
+					<div onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'FacebookLikeItem']);"> 
+						<br/>
+						<div style="overflow: visible; z-index: 9000" class="fb-like" data-send="false" data-layout="box_count" data-width="100" data-show-faces="false" data-share="true" data-font="trebuchet ms" onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'FacebookLikeItem']);"></div>
+					</div>
+				</div>
+				<br/><br/><% if @image_height.to_i > 400 %><br/><br/><% end %><% if not current_user?(item.user) %><% if @image_height.to_i > 450 %><br/><% end %><% end %>
+				<% if current_user?(item.user) %>
+					<a href="<%= edit_item_path(item.id) %>" onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'EditPhoto']);" ><input value="edit photo" class="otheractions round" ></a>
+				<% end %>
+				<a href="#action-embed" name="modal" onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'EmbedPhoto']);"><input value="</> embed" class="otheractions round" ></a>
+				<% if not @tinyurl.nil? %>
+					<a href="#action-getlink" name="modal" onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'GetURL']);" ><input value="link url" class="otheractions round" ></a>
+				<% end %>
+				<br/>&nbsp;<br/>
+				<a href="#action-reportitem" name="modal" onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'ReportPhoto']);" ><input value="report" class="otheractions round" ></a>
+				<% if signed_in? && @likemessage == "isliked" %>
+					<a href="<%= root_url+'p/'+@image_tinyurl+'/'%><% if @image_title.length > 4 %><%= @image_title+'/' %><% end %>?p=unlike" onclick="_gaq.push(['_trackEvent', 'ItemView', 'Click', 'UnlikePhoto']);"><input value="unlike photo" class="otheractions round" ></a>
+				<% end %>
+
+				<!-- #right column end -->
+			</div>
+		</div>
+	</div>
+</div>  
+<!-- end new 3 col css -->
+
+</div>
+
+
+
+	<!-- include item modals -->		
+	<%= render 'items/actionmodals' %>	
+	<%= render 'items/actionmodals2' %>	
+				
+	<!-- show pings -->		
+	<%= render 'pings/pingsmain' %>					
+
+</div>
+
+<% end %>
+ 
+<%# end %>
+  
+
+
+  </td>
+</tr>
+
+
+
+<script type="text/javascript">  
+$("#getlinkurl").focus(function() {
+    var $this = $(this);
+    $this.select();
+
+    // Work around Chrome's little problem
+    $this.mouseup(function() {
+        // Prevent further mouseup intervention
+        $this.unbind("mouseup");
+        return false;
+    });
+});
+</script>
+<script type="text/javascript">  
+$("#embedphoto").focus(function() {
+    var $this = $(this);
+    $this.select();
+
+    // Work around Chrome's little problem
+    $this.mouseup(function() {
+        // Prevent further mouseup intervention
+        $this.unbind("mouseup");
+        return false;
+    });
+});
+</script>
+
+
+
